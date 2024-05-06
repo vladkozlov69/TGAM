@@ -156,3 +156,49 @@ void TGAM::dump(const unsigned char* data, const int len)
     }
     _debug->println("");
 }
+
+void TGAM::parsePayload()
+{
+    memset(values, 0, sizeof(values));
+
+    for (size_t ptr = 0; ptr < _dataLen; ptr++) 
+    {
+        switch (_payload[ptr]) 
+        {
+            case 0x2:
+                //signalQuality = _payload[++ptr];
+                break;
+            case 0x4:
+                //att = _payload[++ptr];
+                break;
+            case 0x5:
+                //med = _payload[++ptr];
+                break;
+            case 0x83:
+                ptr++;
+                for (int j = 0; j < EEG_SIGNAL_BANDS; j++) 
+                {
+                	uint8_t a,b,c;
+                    a = _payload[++ptr];
+                    b = _payload[++ptr];
+                    c = _payload[++ptr];
+                    values[j] = ((uint32_t)a << 16) | ((uint32_t)b << 8) | (uint32_t)c;
+                }
+                break;
+            case 0x80:
+                // We dont' use this value so let's skip it and just increment i
+                // uint8_t packetLength = packetData[++i];
+                // rawValue = ((int)packetData[++i] << 8) | packetData[++i];
+                ptr += 3;
+                break;
+            default:
+                if (_debug)
+                {
+                    _debug->print("Wrong payload signature:");
+                    _debug->println(_payload[ptr]);
+                }
+                break;
+        }
+    }
+
+}
