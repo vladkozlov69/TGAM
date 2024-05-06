@@ -27,13 +27,13 @@ void TGAM::loop()
     {
         uint8_t ch = _stream->read();
 
-        if (_debug)
-        {
+        // if (_debug)
+        // {
             // _debug->print(_index);
             // _debug->print("\t");
-            _debug->print(ch, HEX);
-            _debug->print(" ");
-        }
+            // _debug->print(ch, HEX);
+            // _debug->print(" ");
+        // }
 
         if (_index < sizeof(_payload))
         {
@@ -101,7 +101,7 @@ void TGAM::loop()
                         }
                         return;
                     }
-                    _debug->println();
+                    // _debug->println();
                     _status = STATUS_OK;
                     _index = 0;
                     return;
