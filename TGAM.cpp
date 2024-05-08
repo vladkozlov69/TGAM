@@ -1,14 +1,14 @@
 #include "TGAM.h"
 
 // Non-blocking function for parse response.
-bool TGAM::read()
+bool TGAM_NS::TGAM::read()
 {
     loop();
     return _status == STATUS_OK;
 }
 
 // Blocking function for parse response. Default timeout is 1s.
-bool TGAM::readUntil(uint16_t timeout)
+bool TGAM_NS::TGAM::readUntil(uint16_t timeout)
 {
     uint32_t start = millis();
     do
@@ -20,7 +20,7 @@ bool TGAM::readUntil(uint16_t timeout)
     return _status == STATUS_OK;
 }
 
-void TGAM::loop()
+void TGAM_NS::TGAM::loop()
 {
     _status = STATUS_WAITING;
     if (_stream->available())
@@ -31,8 +31,8 @@ void TGAM::loop()
         // {
             // _debug->print(_index);
             // _debug->print("\t");
-            // _debug->print(ch, HEX);
-            // _debug->print(" ");
+            _debug->print(ch, HEX);
+            _debug->print(" ");
         // }
 
         if (_index < sizeof(_payload))
@@ -101,7 +101,7 @@ void TGAM::loop()
                         }
                         return;
                     }
-                    // _debug->println();
+                    _debug->println();
                     _status = STATUS_OK;
                     _index = 0;
                     return;
@@ -118,7 +118,7 @@ void TGAM::loop()
     }
 }
 
-uint8_t TGAM::calculateCheckSum(uint8_t * payload, size_t len)
+uint8_t TGAM_NS::TGAM::calculateCheckSum(uint8_t * payload, size_t len)
 {
     uint16_t checksum = 0;
     for (int i = 0; i < len; i++)
@@ -133,12 +133,12 @@ uint8_t TGAM::calculateCheckSum(uint8_t * payload, size_t len)
     return ~checksum & 0xFF;
 }
 
-void TGAM::dumpPayload()
+void TGAM_NS::TGAM::dumpPayload()
 {
     dump((const byte *)_payload, _dataLen);
 }
 
-void TGAM::dump(const unsigned char* data, const int len)
+void TGAM_NS::TGAM::dump(const unsigned char* data, const int len)
 {
     for (int i=0; i<len; i++) 
     {
@@ -157,7 +157,7 @@ void TGAM::dump(const unsigned char* data, const int len)
     _debug->println("");
 }
 
-void TGAM::parsePayload()
+void TGAM_NS::TGAM::parsePayload()
 {
     memset(values, 0, sizeof(values));
 
@@ -201,4 +201,62 @@ void TGAM::parsePayload()
         }
     }
 
+}
+
+int TGAM_NS::TGAM::Setup(TGAM_NS::Config config, TGAM_NS::Baudrate initialBaudrate, TGAM_NS::Baudrate targetBaudrate)
+{
+    uint8_t mode2 = 0x63;
+    _stream->write((uint8_t)mode2);
+    _stream->flush();
+    delay(2000);
+    // _stream->end();
+    // _stream->begin(57600);
+    return 0;
+
+    // Default TGAM 2.8 baudrate is 9600, start it
+    _stream->begin((unsigned long)initialBaudrate);
+    // while(!Serial) // Might be necessary for some arduino boards
+
+    // Change baudrate
+    // Page 6, baudrate selection
+    uint8_t mode = 0x60 | (config.configMode == CONFIG_RAW ? 3 : config.configMode);
+    _stream->write((uint8_t)mode);
+    
+    // HACK: We should now wait for a complete packet to be received,
+    // as to verify everything is still working
+    delay(2000);
+    _stream->flush();
+    _stream->begin((unsigned long)targetBaudrate);
+    // while(!Serial) // Might be necessary for some arduino boards
+    delay(5000);
+    
+    // First off, we must send the mode change command
+    // 00000010 (0x02): 57.6k baud, normal+raw output mode
+    _stream->write((uint8_t)config.configMode);
+    delay(1000);
+    
+    // Config - Page 1
+    // [0] RAW
+    // [1] 10/8 bits (ENABLED)
+    // [2] RAW Marker (DISABLED)
+    mode = 0x12 | (config.configMode == CONFIG_RAW ? 0x01 : 0x00);
+    _stream->write(mode);
+    delay(1000);
+
+    // Measuraments - Page 2
+    // [1] Quality
+    // [2] Power - int
+    // [3] Power - float (DISABLED)
+    // [4] Battery (DISABLED)
+    mode = 0x20 | (config.quality ? 0x01 : 0x00) | (config.eegPowers ? 0x02 : 0x00);
+    _stream->write(mode);
+    delay(1000);
+
+    // eSense - Page 3 (0011 << 8) | (0011)
+    mode = 0x30 | (config.attention ? 0x01 : 0x00) | (config.meditation ? 0x02 : 0x00);
+    _stream->write(mode);
+    delay(1000);
+
+    // Baud (page 6) will not be modified as it has already been done		
+    return 0;
 }
