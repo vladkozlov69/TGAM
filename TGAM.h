@@ -66,6 +66,7 @@ namespace TGAM_NS
     private:
         void loop();  
         void dump(const unsigned char* data, const int len);  
+        String dumpToString(const unsigned char* data, const int len);
     protected:
         uint8_t calculateCheckSum(uint8_t * payload, size_t len);
     public:
@@ -81,7 +82,20 @@ namespace TGAM_NS
         bool read();
         bool readUntil(uint16_t timeout = SINGLE_RESPONSE_TIME);
         void dumpPayload();
+        String dumpPayloadToString();
+        int datalen()
+        {
+            return _dataLen;
+        }
+        short raw()
+        {
+            return (_payload[2]<<8) | _payload[3];
+        }
         void parsePayload();
+        uint8_t * payload()
+        {
+            return this->_payload;
+        }
         int Setup(Config config, Baudrate initialBaudrate, Baudrate targetBaudrate);
         int Setup(ConfigMode configMode, Baudrate targetBaudrate)
         {

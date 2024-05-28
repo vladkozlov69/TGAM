@@ -27,13 +27,13 @@ void TGAM_NS::TGAM::loop()
     {
         uint8_t ch = _stream->read();
 
-        // if (_debug)
-        // {
+        if (_debug)
+        {
             // _debug->print(_index);
             // _debug->print("\t");
             _debug->print(ch, HEX);
             _debug->print(" ");
-        // }
+        }
 
         if (_index < sizeof(_payload))
         {
@@ -101,7 +101,10 @@ void TGAM_NS::TGAM::loop()
                         }
                         return;
                     }
-                    _debug->println();
+                    if(_debug)
+                    {
+                        _debug->println();
+                    }
                     _status = STATUS_OK;
                     _index = 0;
                     return;
@@ -140,21 +143,53 @@ void TGAM_NS::TGAM::dumpPayload()
 
 void TGAM_NS::TGAM::dump(const unsigned char* data, const int len)
 {
+    if(_debug) 
+    {
+        for (int i=0; i<len; i++) 
+        {
+            char nibble, hexchar;
+
+            nibble = (data[i] >> 4) & 0x0f;
+            hexchar = nibble <= 9 ? '0' + nibble : 'A' + (nibble-10);
+                                    
+            _debug->print(hexchar);
+
+            nibble = data[i] & 0x0f;
+            hexchar = nibble <= 9 ? '0' + nibble : 'A' + (nibble-10);
+
+            _debug->print(hexchar);
+            _debug->print(' ');
+        }
+        _debug->println("");
+    }
+}
+
+String TGAM_NS::TGAM::dumpPayloadToString()
+{
+    return dumpToString((const byte *)_payload, _dataLen);
+}
+
+String TGAM_NS::TGAM::dumpToString(const unsigned char* data, const int len)
+{
+    String result = "";
+
     for (int i=0; i<len; i++) 
     {
         char nibble, hexchar;
 
         nibble = (data[i] >> 4) & 0x0f;
         hexchar = nibble <= 9 ? '0' + nibble : 'A' + (nibble-10);
-        _debug->print(hexchar);
+
+        result += hexchar;
 
         nibble = data[i] & 0x0f;
         hexchar = nibble <= 9 ? '0' + nibble : 'A' + (nibble-10);
 
-        _debug->print(hexchar);
-        _debug->print(' ');
+        result += hexchar;
+        result += ' ';
     }
-    _debug->println("");
+
+    return result;
 }
 
 void TGAM_NS::TGAM::parsePayload()
