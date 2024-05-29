@@ -201,13 +201,13 @@ void TGAM_NS::TGAM::parsePayload()
         switch (_payload[ptr]) 
         {
             case 0x2:
-                //signalQuality = _payload[++ptr];
+                signalQuality = _payload[++ptr];
                 break;
             case 0x4:
-                //att = _payload[++ptr];
+                att = _payload[++ptr];
                 break;
             case 0x5:
-                //med = _payload[++ptr];
+                med = _payload[++ptr];
                 break;
             case 0x83:
                 ptr++;

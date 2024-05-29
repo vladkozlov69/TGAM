@@ -62,6 +62,7 @@ namespace TGAM_NS
         uint8_t _index = 0;
         uint8_t _dataLen = 0;
         uint8_t _checksum;
+        uint8_t med, att, signalQuality;
         uint32_t values[EEG_SIGNAL_BANDS];
     private:
         void loop();  
@@ -117,6 +118,23 @@ namespace TGAM_NS
             }
 
             return -1;
+        }
+
+        uint8_t getAtt()
+        {
+            return att;
+        }
+        uint8_t getMed()
+        {
+            return med;
+        }
+        uint8_t getSignalQuality()
+        {
+            return signalQuality;
+        }
+        uint32_t getValue(int idx)
+        {
+            return values[idx];
         }
     };
 
